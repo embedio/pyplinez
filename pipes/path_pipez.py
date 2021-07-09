@@ -1,4 +1,4 @@
-from s_toolz import dd_path
+from pipe_toolz import dd_path
 
 
 def path_pipe_header_value_include(value):

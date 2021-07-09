@@ -1,4 +1,4 @@
-from p_toolz import dd_seq
+from pipe_toolz import dd_seq
 
 
 def seq_pipe_groupby_key_apply(key, *funcs):
