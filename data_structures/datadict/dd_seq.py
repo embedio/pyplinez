@@ -1,4 +1,4 @@
-from datadict_toolbox import (
+from ds_toolz import (
     valmap,
     valfilter,
     keyfilter,
@@ -94,9 +94,3 @@ def seq_nth_element(int):
     nth_value = lambda seq: nth(int, seq)
     return curried.valmap(nth_value)
 
-
-if __name__ == "__main__":
-    from datadict_toolbox import *
-    from datadict_vaex import *
-    from datadict_pathlib import *
-    from datadict import *

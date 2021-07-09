@@ -1,5 +1,5 @@
 from vaex import from_ascii, from_pandas
-from datadict_toolbox import valmap, valfilter, second, curried, complement, unique
+from ds_toolz import valmap, valfilter, second, curried, complement, unique
 from datadict import Enhanced_DataDict
 
 
