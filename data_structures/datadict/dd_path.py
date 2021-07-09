@@ -1,5 +1,5 @@
 from pathlib.Path import is_file, as_posix
-from ds_tools import valmap, valfilter, curried
+from ds_toolz import valmap, valfilter, curried
 
 
 def path_filter_files(mapping):
@@ -22,4 +22,3 @@ def xpath_filter_row_one_value(value):
 def path_path_to_posix(mapping):
     as_posix = lambda path: path.as_posix()
     return valmap(as_posix, mapping)
-

@@ -1,5 +1,4 @@
-from vaex import from_ascii, from_pandas
-from ds_toolz import valmap, valfilter, second, curried, complement, unique
+from ds_toolz import dictoolz, curried
 from datadict import Enhanced_DataDict
 
 
@@ -20,7 +19,7 @@ def xvaex_filter_by_column(column_name):
 
 def vaex_get_column_names(mapping):
     column_names = lambda df: df.column_names
-    return valmap(column_names, mapping)
+    return dictoolz.valmap(column_names, mapping)
 
 
 def vaex_unique_column_values(column_name):
@@ -29,20 +28,22 @@ def vaex_unique_column_values(column_name):
 
 
 def vaex_vaex_to_gen(mapping):
+    from ds_toolz import second
+
     """Transforms vaex dataframe rows into a generator of python dicts."""
     dframe_to_iterrows = lambda df: (second(x) for x in df.iterrows())
-    return valmap(dframe_to_iterrows, mapping)
+    return dictoolz.valmap(dframe_to_iterrows, mapping)
 
 
 def vaex_ascii_to_vaex(mapping):
     """Transforms an ascii/text, tab seperated file into a vaex dataframe."""
     to_vaex_dframe = lambda path: from_ascii(path, seperator="\t")
-    return valmap(to_vaex_dframe, mapping)
+    return dictoolz.valmap(to_vaex_dframe, mapping)
 
 
 def vaex_transpose_vaex(mapping):
     transpose_vaex = lambda df: from_pandas(df.to_pandas_df().transpose())
-    return valmap(transpose_vaex, mapping)
+    return dictoolz.valmap(transpose_vaex, mapping)
 
 
 def vaex_vaex_to_dict(*funcs):

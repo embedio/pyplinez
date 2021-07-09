@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from collections import UserDict
 from types import MappingProxyType
-from ds_toolz import dictoolz, pipe 
+from ds_toolz import dictoolz, functoolz
 
 
 @dataclass
@@ -10,7 +10,7 @@ class DataDict(UserDict):
         self.data = MappingProxyType(data)
 
     def pipe(self, *funcs):
-        return DataDict(pipe(self.data, *funcs))
+        return DataDict(functoolz.pipe(self.data, *funcs))
 
     def items(self):
         return self.data.items()

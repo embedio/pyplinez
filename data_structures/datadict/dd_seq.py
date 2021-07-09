@@ -83,7 +83,7 @@ def seq_first_element(mapping):
 
 
 def seq_second_element(mapping):
-    return valmap(second,mapping)
+    return valmap(second, mapping)
 
 
 def seq_last_element(mapping):
@@ -93,4 +93,3 @@ def seq_last_element(mapping):
 def seq_nth_element(int):
     nth_value = lambda seq: nth(int, seq)
     return curried.valmap(nth_value)
-
