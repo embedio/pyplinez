@@ -1,6 +1,6 @@
-from ds_toolz import dictoolz, curried
-from datadict import Enhanced_DataDict
-
+from .. import dictoolz, curried, itertoolz
+from .. import vaex
+from . import Enhanced_DataDict
 
 def vaex_filter_value_by_column(value, column_name):
     get_value = lambda df: df[df[column_name] == value]
@@ -28,10 +28,9 @@ def vaex_unique_column_values(column_name):
 
 
 def vaex_vaex_to_gen(mapping):
-    from ds_toolz import second
 
     """Transforms vaex dataframe rows into a generator of python dicts."""
-    dframe_to_iterrows = lambda df: (second(x) for x in df.iterrows())
+    dframe_to_iterrows = lambda df: (itertoolz.second(x) for x in df.iterrows())
     return dictoolz.valmap(dframe_to_iterrows, mapping)
 
 
@@ -49,33 +48,3 @@ def vaex_transpose_vaex(mapping):
 def vaex_vaex_to_dict(*funcs):
     to_dict = lambda df: Enhanced_DataDict(df.to_dict()).pipe(*funcs).data
     return curried.valmap(to_dict)
-
-
-if __name__ == "__main__":
-    import vaex as vx
-    from generators import G
-
-    from toolbox import *
-    from datadict import *
-    from data import *
-
-    data = {path.stem: path for path in Path("text_data").iterdir()}
-
-    onet_filedata = Enhanced_DataDict(data).pipe(
-        path_filter_files,
-        path_filter_row_one_value("ONET_SOC_CODE"),
-        path_filter_row_one_value("Element_Name"),
-        path_filter_row_one_value("Scale_ID"),
-        path_path_to_posix,
-    )
-
-    scaleid_filedata = Enhanced_DataDict(data).pipe(
-        path_filter_files,
-        path_filter_row_one_value("Scale_ID"),
-        xpath_filter_row_one_value("ONET_SOC_CODE"),
-        path_path_to_posix,
-    )
-
-    onet_dataframe = lambda: onet_filedata.pipe(vaex_ascii_to_vaex)
-
-    scaleid_dataframe = lambda: scaleid_filedata.pipe(vaex_ascii_to_vaex)

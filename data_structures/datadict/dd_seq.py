@@ -1,4 +1,4 @@
-from ds_toolz import (
+from . import (
     valmap,
     valfilter,
     keyfilter,
@@ -14,7 +14,7 @@ from ds_toolz import (
     last,
     nth,
 )
-from datadict import DataDict
+from . import DataDict
 
 
 def seq_bytes_to_utf8(mapping):

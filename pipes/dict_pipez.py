@@ -1,4 +1,4 @@
-from pipe_toolz import dd_dict, pick
+from . import dd_dict, pick
 
 
 def dict_pipe_key_sort(key):

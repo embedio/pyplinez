@@ -1,5 +1,4 @@
-from pathlib.Path import is_file, as_posix
-from ds_toolz import valmap, valfilter, curried
+from . import valmap, valfilter, curried
 
 
 def path_filter_files(mapping):

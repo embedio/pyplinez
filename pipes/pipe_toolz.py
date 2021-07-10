@@ -1,5 +1,3 @@
-from data_structures.datadict import dd_path, dd_seq, dd_dict, dd_vaex
-
 # path_filter_row_one_value,
 # xpath_filter_row_one_value
 
@@ -10,10 +8,12 @@ from data_structures.datadict import dd_path, dd_seq, dd_dict, dd_vaex
 # dict_sort_by_key
 
 
-def merge_maps(*maps, **kwargs):
-    from toolz import curried
-    from curried import valmap
+import itertools
+from data_structures.ds_toolz import curried, itertoolz, dictoolz, functoolz
+from data_structures.datadict import dd_path, dd_seq, dd_dict
 
+
+def merge_maps(*maps, **kwargs):
     return curried.valmap(*maps, **kwargs)
 
 
@@ -27,18 +27,17 @@ def keyjoin(
     left_default="__no__default__",
     right_default="__no__default__",
 ):
-    from toolz import join, keymap
-    from itertools import starmap
 
+    # join, keymap, merge
     # consider using merge_with to apply function to values after merge operation
     leftkey = lprefix + leftkey
-    leftseq = (keymap(lambda x: lprefix + x, x) for x in leftseq)
+    leftseq = (dictoolz.keymap(lambda x: lprefix + x, x) for x in leftseq)
 
     rightkey = rprefix + rightkey
-    rightseq = (keymap(lambda x: rprefix + x, x) for x in rightseq)
-    return it.starmap(
-        merge,
-        join(
+    rightseq = (dictoolz.keymap(lambda x: rprefix + x, x) for x in rightseq)
+    return itertools.starmap(
+        dictoolz.merge,
+        itertoolz.join(
             leftkey=leftkey,
             leftseq=leftseq,
             rightkey=rightkey,
@@ -50,22 +49,16 @@ def keyjoin(
 
 
 def pick(seq):
-    from toolz import curried, partial
-    from curried import keyfilter
-
-    p = partial(lambda k: k in seq)
+    p = functoolz.partial(lambda k: k in seq)
     return curried.keyfilter(p)
 
 
 def npick(seq, d):
-    from toolz import keyfilter
-
-    return keyfilter(lambda k: k in seq, d)
+    return dictoolz.keyfilter(lambda k: k in seq, d)
 
 
 def chainmap(*maps):
     from collections import ChainMap
 
-    chain_maps = lambda map: ChainMap(first(map))
+    chain_maps = lambda map: ChainMap(itertoolz.first(map))
     return curried.merge_with(chain_maps, *maps)
-

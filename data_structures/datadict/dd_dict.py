@@ -1,4 +1,4 @@
-from ds_toolz import curried, dictoolz, functoolz
+from . import curried, dictoolz, functoolz
 
 
 def dict_filter_by_key(key):

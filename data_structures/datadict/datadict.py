@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from collections import UserDict
 from types import MappingProxyType
-from ds_toolz import dictoolz, functoolz
+from . import dictoolz, functoolz
 
 
 @dataclass
@@ -72,13 +72,3 @@ class Enhanced_DataDict(DataDict):
 
     def pick(self, seq):
         return Enhanced_DataDict(dictoolz.keyfilter(lambda k: k in seq, self.data))
-
-
-if __name__ == "__main__":
-    from pathlib import Path
-    from datadict_toolbox.dictoolz import *
-
-    data = {path.stem: path for path in Path("text_data").iterdir()}
-
-    datadict = DataDict(data)
-    edatadict = Enhanced_DataDict(data)
