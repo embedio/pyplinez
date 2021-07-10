@@ -23,9 +23,9 @@ class DataDict(UserDict):
 
 
 @dataclass
-class Enhanced_DataDict(DataDict):
+class Enhanced_DataDict(UserDict):
     def __init__(self, data):
-        super().__init__(data)
+        self.data = MappingProxyType(data)
 
     def pipe(self, *funcs):
         return Enhanced_DataDict(pipe(self.data, *funcs))

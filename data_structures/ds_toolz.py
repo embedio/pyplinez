@@ -4,4 +4,4 @@ import cytoolz
 # import toolz
 # from cytoolz import *
 
-import vaex
+from vaex.dataframe import DataFrame, Column

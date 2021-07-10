@@ -1,6 +1,8 @@
 from .. import dictoolz, curried, itertoolz
-from .. import vaex
+from ..DataFrame import column_names, to_pandas_df, to_dict, from_ascii, from_pandas
+from ..Column import tolist
 from . import Enhanced_DataDict
+
 
 def vaex_filter_value_by_column(value, column_name):
     get_value = lambda df: df[df[column_name] == value]
@@ -28,7 +30,6 @@ def vaex_unique_column_values(column_name):
 
 
 def vaex_vaex_to_gen(mapping):
-
     """Transforms vaex dataframe rows into a generator of python dicts."""
     dframe_to_iterrows = lambda df: (itertoolz.second(x) for x in df.iterrows())
     return dictoolz.valmap(dframe_to_iterrows, mapping)
