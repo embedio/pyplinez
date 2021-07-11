@@ -9,8 +9,8 @@
 
 
 import itertools
-from data_structures.ds_toolz import curried, itertoolz, dictoolz, functoolz
-from data_structures.datadict import dd_path, dd_seq, dd_dict
+from toolz import curried, itertoolz, dictoolz, functoolz
+from datatoolz.datadict import dd_path, dd_seq, dd_dict
 
 
 def merge_maps(*maps, **kwargs):

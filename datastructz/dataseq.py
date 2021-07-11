@@ -1,6 +1,6 @@
 from collections import UserList
 from dataclasses import dataclass
-from .. import functoolz, itertoolz, recipes
+from toolz import functoolz, itertoolz, recipes
 
 
 @dataclass
@@ -20,6 +20,9 @@ class Enhanced_DataSeq(UserList):
     def pipe(self, *funcs):
         return DataSeq(functoolz.pipe(self.data, *funcs))
 
+    def do(self, func):
+        return DataSeq(functoolz.do(func, self.data))
+
     def remove(self, predicate):
         return DataSeq(itertoolz.remove(predicate, self.data))
 
@@ -31,9 +34,6 @@ class Enhanced_DataSeq(UserList):
 
     def interleave(self, seqs):
         return DataSeq(itertoolz.interleave(self.data, seqs))
-
-    def unique(self, key=None):
-        return DataSeq(itertoolz.unique(self.data, key))
 
     def isdistinct(self, seq):
         return DataSeq(itertoolz.isdistinct(self.data))
@@ -71,12 +71,6 @@ class Enhanced_DataSeq(UserList):
     def interpose(self, el):
         return DataSeq(itertoolz.interpose(el, self.data))
 
-    def frequencies(self):
-        pass
-
-    def reduceby(self):
-        pass
-
     def sliding_window(self, n):
         return DataSeq(itertoolz.sliding_window(n, self.data))
 
@@ -93,14 +87,8 @@ class Enhanced_DataSeq(UserList):
     def pluck(self, ind, default="__no__default__"):
         return DataSeq(itertoolz.pluck(ind, self.data, default))
 
-    def join(self):
-        pass
-
     def tail(self, n):
         return DataSeq(itertoolz.tail(n, self.data))
-
-    def diff(self):
-        pass
 
     def topk(self, k, key=None):
         return DataSeq(itertoolz.topk(k, self.data, key))
@@ -120,3 +108,7 @@ class Enhanced_DataSeq(UserList):
 
     def partitionby(self, func):
         return DataSeq(recipes.partitionby(func, self.data))
+
+    def compact(self, func=None):
+        return DataSeq(toolz.filter(func, self.data))
+

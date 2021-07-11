@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from collections import UserDict
 from types import MappingProxyType
-from .. import dictoolz, functoolz
+from toolz import dicttoolz, functoolz
 
 
 @dataclass
@@ -81,4 +81,3 @@ class Enhanced_DataDict(UserDict):
 
     def keys(self):
         return self.data.keys()
-
