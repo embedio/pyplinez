@@ -6,7 +6,16 @@ from .. import functoolz, itertoolz, recipes
 @dataclass
 class DataSeq(UserList):
     def __init__(self, data=None):
-        self.data = tuple(data)
+        self.data = data if data != None else []
+
+    def pipe(self, *funcs):
+        return DataSeq(functoolz.pipe(self.data, *funcs))
+
+
+@dataclass
+class Enhanced_DataSeq(UserList):
+    def __init__(self, data=None):
+        self.data = data if data != None else []
 
     def pipe(self, *funcs):
         return DataSeq(functoolz.pipe(self.data, *funcs))
@@ -38,19 +47,19 @@ class DataSeq(UserList):
     def take_nth(self, n):
         return DataSeq(itertoolz.take_nth(n, self.data))
 
+    @property
     def first(self):
         return DataSeq(itertoolz.first(self.data))
 
-    def first(self):
-        return DataSeq(itertoolz.first(self.data))
-
+    @property
     def second(self):
         return DataSeq(itertoolz.second(self.data))
 
     def nth(self, n):
         return DataSeq(itertoolz.nth(n, self.data))
 
-    def last(self, n):
+    @property
+    def last(self):
         return DataSeq(itertoolz.last(self.data))
 
     def get(self, ind, default="__no__default__"):
@@ -77,6 +86,7 @@ class DataSeq(UserList):
     def partition_all(self, n):
         return DataSeq(itertoolz.partition_all(n, self.data))
 
+    @property
     def count(self):
         return DataSeq(itertoolz.count(self.data))
 
@@ -95,6 +105,7 @@ class DataSeq(UserList):
     def topk(self, k, key=None):
         return DataSeq(itertoolz.topk(k, self.data, key))
 
+    @property
     def peek(self):
         return DataSeq(itertoolz.peek(self.data))
 
