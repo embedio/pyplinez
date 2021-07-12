@@ -111,4 +111,3 @@ class Enhanced_DataSeq(UserList):
 
     def compact(self, func=None):
         return DataSeq(toolz.filter(func, self.data))
-
