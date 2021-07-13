@@ -11,101 +11,113 @@ class Enhanced_DataSeq(UserList):
         self.data = data if data != None else []
 
     def pipe(self, *funcs):
-        return DataSeq(functoolz.pipe(self.data, *funcs))
+        return Enhanced_DataSeq(functoolz.pipe(self.data, *funcs))
 
     @property
-    def count(self):
-        return DataSeq(itertoolz.count(self.data))
+    def count_all(self):
+        return Enhanced_DataSeq(itertoolz.count(self.data))
 
     @property
     def peek(self):
-        return DataSeq(itertoolz.peek(self.data))
+        return Enhanced_DataSeq(itertoolz.peek(self.data))
 
     @property
     def first(self):
-        return DataSeq(itertoolz.first(self.data))
+        return Enhanced_DataSeq(itertoolz.first(self.data))
 
     @property
     def second(self):
-        return DataSeq(itertoolz.second(self.data))
+        return Enhanced_DataSeq(itertoolz.second(self.data))
 
     @property
     def last(self):
-        return DataSeq(itertoolz.last(self.data))
+        return Enhanced_DataSeq(itertoolz.last(self.data))
 
     def do(self, func):
         return DataSeq(functoolz.do(func, self.data))
 
     def remove(self, predicate):
-        return DataSeq(itertoolz.remove(predicate, self.data))
+        return Enhanced_DataSeq(itertoolz.remove(predicate, self.data))
 
     def accumulate(self, binop, initial="__no__default__"):
-        return DataSeq(itertoolz.accumulate(binop, self.data, initial))
+        return Enhanced_DataSeq(itertoolz.accumulate(binop, self.data, initial))
 
     def groupby(self, key):
-        return DataSeq(itertoolz.groupby(key, self.data))
+        return Enhanced_DataSeq(itertoolz.groupby(key, self.data))
 
     def interleave(self, seqs):
-        return DataSeq(itertoolz.interleave(self.data, seqs))
+        return Enhanced_DataSeq(itertoolz.interleave(self.data, seqs))
 
     def isdistinct(self, seq):
-        return DataSeq(itertoolz.isdistinct(self.data))
+        return Enhanced_DataSeq(itertoolz.isdistinct(self.data))
 
     def take(self, n):
-        return DataSeq(itertoolz.take(n, self.data))
+        return Enhanced_DataSeq(itertoolz.take(n, self.data))
 
     def drop(self, n):
-        return DataSeq(itertoolz.drop(n, self.data))
+        return Enhanced_DataSeq(itertoolz.drop(n, self.data))
 
     def take_nth(self, n):
-        return DataSeq(itertoolz.take_nth(n, self.data))
+        return Enhanced_DataSeq(itertoolz.take_nth(n, self.data))
 
     def nth(self, n):
-        return DataSeq(itertoolz.nth(n, self.data))
+        return Enhanced_DataSeq(itertoolz.nth(n, self.data))
 
     def get(self, ind, default="__no__default__"):
-        return DataSeq(itertoolz.get(ind, self.data, default))
+        return Enhanced_DataSeq(itertoolz.get(ind, self.data, default))
 
     def cons(self, el):
-        return DataSeq(itertoolz.cons(el, self.data))
+        return Enhanced_DataSeq(itertoolz.cons(el, self.data))
 
     def interpose(self, el):
-        return DataSeq(itertoolz.interpose(el, self.data))
+        return Enhanced_DataSeq(itertoolz.interpose(el, self.data))
 
     def sliding_window(self, n):
-        return DataSeq(itertoolz.sliding_window(n, self.data))
+        return Enhanced_DataSeq(itertoolz.sliding_window(n, self.data))
 
     def partition(self, n, pad="__no__pad__"):
-        return DataSeq(itertoolz.partition(n, self.data, pad))
+        return Enhanced_DataSeq(itertoolz.partition(n, self.data, pad))
 
     def partition_all(self, n):
-        return DataSeq(itertoolz.partition_all(n, self.data))
+        return Enhanced_DataSeq(itertoolz.partition_all(n, self.data))
 
     def pluck(self, ind, default="__no__default__"):
-        return DataSeq(itertoolz.pluck(ind, self.data, default))
+        return Enhanced_DataSeq(itertoolz.pluck(ind, self.data, default))
 
     def tail(self, n):
-        return DataSeq(itertoolz.tail(n, self.data))
+        return Enhanced_DataSeq(itertoolz.tail(n, self.data))
 
     def topk(self, k, key=None):
-        return DataSeq(itertoolz.topk(k, self.data, key))
+        return Enhanced_DataSeq(itertoolz.topk(k, self.data, key))
 
     def peekn(self, n):
-        return DataSeq(itertoolz.peekn(n, self.data))
+        return Enhanced_DataSeq(itertoolz.peekn(n, self.data))
 
     def random_sample(self, prob, random_state=None):
-        return DataSeq(itertoolz.random_sample(prob, self.data, random_state))
+        return Enhanced_DataSeq(itertoolz.random_sample(prob, self.data, random_state))
 
     def countby(self, key):
-        return DataSeq(recipes.countby(key, self.data))
+        return Enhanced_DataSeq(recipes.countby(key, self.data))
 
     def partitionby(self, func):
-        return DataSeq(recipes.partitionby(func, self.data))
+        return Enhanced_DataSeq(recipes.partitionby(func, self.data))
 
     def compact(self, func=None):
         from toolz import filter as _filter
 
-        return DataSeq(_filter(func, self.data))
+        return Enhanced_DataSeq(_filter(func, self.data))
+
+    def clear(self):
+        return []
+
+    def sort(self):
+        return self.data.copy().sort()
+
+    def remove(self, value):
+        return self.data.copy().remove(value)
+
+    def pop(self, index=-1):
+        return self.data.copy().pop(index)
 
 
 @dataclass
@@ -114,8 +126,7 @@ class Enhanced_DataDict(UserDict):
         self.data = data
 
     def pipe(self, *funcs):
-        # return Enhanced_DataDict(pipe(self.data, *funcs))
-        return self.__class__(pipe(self.data, *funcs))
+        return Enhanced_DataDict(functoolz.pipe(self.data, *funcs))
 
     def iget(self, ind, default="__no__default__"):
         return itertoolz.get(ind, self.data, default)

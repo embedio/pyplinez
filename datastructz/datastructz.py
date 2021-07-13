@@ -13,6 +13,17 @@ class DataSeq(UserList):
     def pipe(self, *funcs):
         return DataSeq(functoolz.pipe(self.data, *funcs))
 
+    def clear(self):
+        return []
+
+    def sort(self):
+        return self.data.copy().sort()
+
+    def remove(self, value):
+        return self.data.copy().remove(value)
+
+    def pop(self, index=-1):
+        return self.data.copy().pop(index)
 
 @dataclass
 class RO_DataDict(UserDict):
