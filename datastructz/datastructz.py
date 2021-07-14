@@ -25,6 +25,7 @@ class DataSeq(UserList):
     def pop(self, index=-1):
         return self.data.copy().pop(index)
 
+
 @dataclass
 class RO_DataDict(UserDict):
     def __init__(self, data):
