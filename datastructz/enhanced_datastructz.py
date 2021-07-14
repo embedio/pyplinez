@@ -34,7 +34,7 @@ class Enhanced_DataSeq(UserList):
         return Enhanced_DataSeq(itertoolz.last(self.data))
 
     def do(self, func):
-        return DataSeq(functoolz.do(func, self.data))
+        return Enhanced_DataSeq(functoolz.do(func, self.data))
 
     def remove(self, predicate):
         return Enhanced_DataSeq(itertoolz.remove(predicate, self.data))
