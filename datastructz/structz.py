@@ -28,6 +28,8 @@ class DataSeq(UserList):
 
 @dataclass
 class RODataSeq(UserList):
+    """experimental"""
+
     def __init__(self, data=None):
         self.data = tuple(data) if data != None else ()
 

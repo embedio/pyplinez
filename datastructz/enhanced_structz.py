@@ -114,13 +114,15 @@ class Enhanced_DataSeq(UserList):
         return self.data.copy().sort()
 
     def remove(self, value):
-        return self.data.copy().remove(value))
+        return self.data.copy().remove(value)
 
     def pop(self, index=-1):
         return self.data.copy().pop(index)
 
 
 class ROEnhanced_DataSeq(UserList):
+    """experimental"""
+
     def __init__(self, data=None):
         self.data = tuple(data) if data != None else ()
 
@@ -181,7 +183,7 @@ class ROEnhanced_DataSeq(UserList):
         return self.__class__(itertoolz.get(ind, self.data, default))
 
     def cons(self, el):
-        return self.__class__((itertoolz.cons(el, self.data))
+        return self.__class__(itertoolz.cons(el, self.data))
 
     def interpose(self, el):
         return self.__class__(itertoolz.interpose(el, self.data))
@@ -261,9 +263,7 @@ class Enhanced_DataDict(UserDict):
         return self.__class__(dicttoolz.merge(self.data, *dicts, **kwargs))
 
     def merge_with(self, func, *dicts, **kwargs):
-        return self.__class__(
-            dicttoolz.merge_with(func, self.data, *dicts, **kwargs)
-        )
+        return self.__class__(dicttoolz.merge_with(func, self.data, *dicts, **kwargs))
 
     def update_in(self, keys, func, default=None):
         return self.__class__(dicttoolz.update_in(self.data, keys, func, default))
@@ -311,7 +311,7 @@ class ROEnhanced_DataDict(UserDict):
         return self.__class__(functoolz.pipe(self.data, *funcs))
 
     def iget(self, ind, default="__no__default__"):
-        return  itertoolz.get(ind, self.data, default)
+        return itertoolz.get(ind, self.data, default)
 
     def itemmap(self, func):
         return self.__class__(dicttoolz.itemmap(func, self.data))
@@ -335,9 +335,7 @@ class ROEnhanced_DataDict(UserDict):
         return self.__class__(dicttoolz.merge(self.data, *dicts, **kwargs))
 
     def merge_with(self, func, *dicts, **kwargs):
-        return self.__class__(
-            dicttoolz.merge_with(func, self.data, *dicts, **kwargs)
-        )
+        return self.__class__(dicttoolz.merge_with(func, self.data, *dicts, **kwargs))
 
     def update_in(self, keys, func, default=None):
         return self.__class__(dicttoolz.update_in(self.data, keys, func, default))
