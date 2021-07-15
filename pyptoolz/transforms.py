@@ -2,6 +2,7 @@ from pathlib import Path
 from vaex.dataframe import DataFrame, Column
 from toolz import dicttoolz, curried, itertoolz
 
+
 def transform_path_to_posix(mapping):
     as_posix = lambda path: path.as_posix()
     return dicttoolz.valmap(as_posix, mapping)

@@ -13,6 +13,11 @@ class DataSeq(UserList):
     def pipe(self, *funcs):
         return DataSeq(functoolz.pipe(self.data, *funcs))
 
+    def map(self, func):
+        from toolz import map as _map
+
+        return self.__class__(_map(func, self.data))
+
     def clear(self):
         return []
 
@@ -24,41 +29,6 @@ class DataSeq(UserList):
 
     def pop(self, index=-1):
         return self.data.copy().pop(index)
-
-
-@dataclass
-class RODataSeq(UserList):
-    """experimental"""
-
-    def __init__(self, data=None):
-        self.data = tuple(data) if data != None else ()
-
-    def pipe(self, *funcs):
-        return DataSeq(functoolz.pipe(self.data, *funcs))
-
-    def clear(self):
-        return ()
-
-    def sort(self, key=None, reverse=False):
-        return tuple(sorted(self.data, key=key, reverse=reverse))
-
-
-@dataclass
-class RODataDict(UserDict):
-    def __init__(self, data):
-        self.data = MappingProxyType(data)
-
-    def pipe(self, *funcs):
-        return DataDict(functoolz.pipe(self.data, *funcs))
-
-    def items(self):
-        return self.data.items()
-
-    def values(self):
-        return self.data.values()
-
-    def keys(self):
-        return self.data.keys()
 
 
 @dataclass
@@ -76,7 +46,7 @@ class DataDict(UserDict):
         return self.data.items()
 
     def pipe(self, *funcs):
-        return Chain_DataDict(pipe(self.data, *funcs))
+        return self.__class__(functoolz.pipe(self.data, *funcs))
 
     def clear(self):
         return {}
@@ -124,55 +94,7 @@ class DataChain(DataDict):
                 if key in m:
                     m[key] = value
                     return
-        self.map[key] = value
-
-    def __len__(self, len=len, sum=sum, map=map):
-        return sum(map(len, self.maps))
-
-    def __iter__(self, chain_from_iterable=itertools.chain.from_iterable):
-        return chain_from_iterable(self.maps)
-
-    def __contains__(self, key, any=any):
-        return any(key in m for m in self.maps)
-
-    def __repr__(self, repr=repr):
-        return " -> ".join(map(repr, self.maps))
-
-
-@dataclass
-class RODataChain(RODataDict):  # partially read-only
-    def __init__(self, data, enable_nonlocal=False, parent=None):
-        self.parent = parent
-        self.enable_nonlocal = enable_nonlocal
-        self.data = MappingProxyType(data)
-        self.maps = [self.data]
-        if parent is not None:
-            self.maps.extend(parent.maps)
-
-    def new_child(self, data, enable_nonlocal=None):
-        enable_nonlocal = (
-            self.enable_nonlocal
-            if enable_nonlocal is None
-            else self.__class__(data=data, enable_nonlocal=enable_nonlocal, parent=self)
-        )
-
-    @property
-    def root(self):
-        return self if self.parent is None else self.parent.root
-
-    def __getitem__(self, key):
-        for m in self.maps:
-            if key in m:
-                break
-        return m[key]
-
-    def __setitem__(self, key, value):
-        if self.enable_nonlocal:
-            for m in self.maps:
-                if key in m:
-                    m[key] = value
-                    return
-        self.map[key] = value
+        self.data[key] = value
 
     def __len__(self, len=len, sum=sum, map=map):
         return sum(map(len, self.maps))
