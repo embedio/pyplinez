@@ -1,44 +1,24 @@
-from . import (
-    valmap,
-    valfilter,
-    keyfilter,
-    pluck,
-    pick,
-    npick,
-    partial,
-    curried,
-    groupby,
-    unique,
-    first,
-    second,
-    last,
-    nth,
-)
-from . import DataDict
+from toolz import dicttoolz, itertoolz, functoolz, curried
+from ..pipes import pipe_toolz
 
 
 def seq_bytes_to_utf8(mapping):
     """Decodes a byte string to utf-8"""
     b2s = lambda s: s.decode() if isinstance(s, bytes) else s
-    byte_2_utf8 = lambda seq: [valmap(b2s, d) for d in seq]
-    return valmap(byte_2_utf8, mapping)
+    byte_2_utf8 = lambda seq: [dicttoolz.valmap(b2s, d) for d in seq]
+    return dicttoolz.valmap(byte_2_utf8, mapping)
 
 
 def seq_get_values_from_dict_keys(dict_keys):
     """Extracts "value" data from "key" column name."""
     pluck_data = lambda seq: sorted(
-        list(pluck(dict_keys, seq, default=None)), key=last, reverse=True
+        list(itertoolz.pluck(dict_keys, seq, default=None)), key=itertoolz.last, reverse=True
     )
     return curried.valmap(pluck_data)
 
 
 def seq_group_by_dict_key(dict_key):
-    groupby_dict_key = lambda seq: groupby(dict_key, seq)
-    return curried.valmap(groupby_dict_key)
-
-
-def eseq_group_by_dict_key(dict_key, *funcs):
-    groupby_dict_key = lambda seq: DataDict(groupby(dict_key, seq)).pipe(*funcs).data
+    groupby_dict_key = lambda seq: itertoolz.groupby(dict_key, seq)
     return curried.valmap(groupby_dict_key)
 
 
@@ -74,22 +54,22 @@ def seq_grab_dict_keys(dict_keys):
 
 
 def seq_sort_by_dict_key(dict_key, reverse=True):
-    sort_by_key = partial(sorted, key=curried.get(dict_key), reverse=reverse)
+    sort_by_key = functoolz.partial(sorted, key=curried.get(dict_key), reverse=reverse)
     return curried.valmap(sort_by_key)
 
 
 def seq_first_element(mapping):
-    return valmap(first, mapping)
+    return dicttoolz.valmap(itertoolz.first, mapping)
 
 
 def seq_second_element(mapping):
-    return valmap(second, mapping)
+    return dicttoolz.valmap(itertoolz.second, mapping)
 
 
 def seq_last_element(mapping):
-    return valmap(last, mapping)
+    return dicttoolz.valmap(itertoolz.last, mapping)
 
 
 def seq_nth_element(int):
-    nth_value = lambda seq: nth(int, seq)
+    nth_value = lambda seq: itertoolz.nth(int, seq)
     return curried.valmap(nth_value)

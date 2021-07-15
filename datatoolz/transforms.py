@@ -16,9 +16,9 @@ def transform_ascii_to_vaex(mapping):
 def transform_vaex_to_gen(mapping):
     """Transforms vaex dataframe rows into a generator of python dicts."""
     dframe_to_iterrows = lambda df: (itertoolz.second(x) for x in df.iterrows())
-    return dictoolz.valmap(dframe_to_iterrows, mapping)
+    return dicttoolz.valmap(dframe_to_iterrows, mapping)
 
 
 def transform_vaex_to_dict(mapping):
     to_dict = lambda df: df.to_dict()
-    return valmap(to_dict, mapping)
+    return dicttoolz.valmap(to_dict, mapping)

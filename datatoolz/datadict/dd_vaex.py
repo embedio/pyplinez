@@ -1,5 +1,6 @@
 from toolz import dicttoolz, curried, itertoolz
-from vaex import DataFrame, Column
+from vaex.dataframe import DataFrame, Column
+from vaex import from_pandas
 
 
 def vaex_filter_value_by_column(value, column_name):

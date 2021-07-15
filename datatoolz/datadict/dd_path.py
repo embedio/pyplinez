@@ -14,6 +14,6 @@ def path_filter_row_one_value(value):
 
 
 def xpath_filter_row_one_value(value):
-   """filter value in first line of file"""
-   has_value = lambda path: value not in path.open().readline()
-   return curried.valfilter(has_value)
+    """filter value in first line of file"""
+    has_value = lambda path: value not in path.open().readline()
+    return curried.valfilter(has_value)
