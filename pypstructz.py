@@ -4,8 +4,8 @@ from toolz import dicttoolz, itertoolz, functoolz, recipes
 
 
 class Enhanced_DataSeq(Sequence):
-    def __init__(self, data=None):
-        self.data = tuple(data) if data is not None else ()
+    def __init__(self, data):
+        self.data = tuple(data) 
 
     def pipe(self, *funcs):
         return self.__class__(functoolz.pipe(self.data, *funcs))
@@ -126,7 +126,7 @@ class RO_DataChain(Mapping):
     def __init__(self, data, enable_nonlocal=False, parent=None):
         self.parent = parent
         self.enable_nonlocal = enable_nonlocal
-        self.data = data if isinstance(data, Mapping) else {}
+        self.data = data 
         self.maps = Enhanced_DataSeq([self.data])
         if parent is not None:
             self.maps = self.maps.concat([parent.maps])
