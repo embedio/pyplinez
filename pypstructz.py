@@ -1,19 +1,17 @@
 from collections.abc import Mapping, Sequence
 from itertools import chain
-from toolz import dicttoolz, itertoolz, functoolz, recipes
+from toolz import dicttoolz, itertoolz, functoolz, recipes, curried, map as mapz
 
 
 class DataSeq(Sequence):
     def __init__(self, data):
-        self.data = tuple([data])
+        self.data = tuple(data)
 
     def pipe(self, *funcs):
         return self.__class__(functoolz.pipe(self.data, *funcs))
 
     def map(self, func):
-        from toolz import map as _map
-
-        return self.__class__(_map(func, self.data))
+        return self.__class__(list(mapz(func, self.data)))
 
     @property
     def count(self):
@@ -98,6 +96,9 @@ class DataSeq(Sequence):
     def random_sample(self, prob, random_state=None):
         return self.__class__(itertoolz.random_sample(prob, self.data, random_state))
 
+    def reduceby(self, key, binop, init='__no__default__'):
+        return self.__class__(itertoolz.reduceby(key=key, binop=binop, seq=self.data, init=init))
+
     def countby(self, key):
         return self.__class__(recipes.countby(key, self.data))
 
@@ -116,7 +117,14 @@ class DataSeq(Sequence):
         return self.__class__(itertoolz.concatv(self.data,seqs))
 
     def clear(self):
-        return []
+        return ()
+
+    def print(self):
+        pass 
+
+    def valpipe(self, *funcs):
+        vp = lambda d: functoolz.pipe(d, *funcs)
+        return self.map(vp).data
 
     def __len__(self):
         return itertoolz.count(self.data)
@@ -135,9 +143,10 @@ class DataChain(Mapping):
         self.parent = parent
         self.enable_nonlocal = enable_nonlocal
         self.data = data
-        self.maps = DataSeq(self.data)
+        self.maps = DataSeq([self.data])
         if parent is not None:
-            self.maps += parent.maps
+            fam_maps = self.maps + parent.maps
+            self.maps = DataSeq(fam_maps)
 
     def new_child(self, data, enable_nonlocal=None):
         enable_nonlocal = (
