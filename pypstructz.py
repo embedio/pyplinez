@@ -3,9 +3,9 @@ from itertools import chain
 from toolz import dicttoolz, itertoolz, functoolz, recipes
 
 
-class Enhanced_DataSeq(Sequence):
+class DataSeq(Sequence):
     def __init__(self, data):
-        self.data = tuple(data) 
+        self.data = tuple([data])
 
     def pipe(self, *funcs):
         return self.__class__(functoolz.pipe(self.data, *funcs))
@@ -112,6 +112,9 @@ class Enhanced_DataSeq(Sequence):
     def concat(self, seqs):
         return self.__class__(itertoolz.concat([self.data, seqs]))
 
+    def concatv(self, seqs):
+        return self.__class__(itertoolz.concatv(self.data,seqs))
+
     def clear(self):
         return []
 
@@ -119,17 +122,22 @@ class Enhanced_DataSeq(Sequence):
         return itertoolz.count(self.data)
 
     def __getitem__(self, key):
-        return tuple(itertoolz.pluck(key, self.data))
+        return itertoolz.get(key, self.data)
 
+    def __repr__(self):
+        return f"{self.data}"
 
-class RO_DataChain(Mapping):
+    def __add__(self, other):
+        return tuple(itertoolz.concatv(self, other))
+
+class DataChain(Mapping):
     def __init__(self, data, enable_nonlocal=False, parent=None):
         self.parent = parent
         self.enable_nonlocal = enable_nonlocal
-        self.data = data 
-        self.maps = Enhanced_DataSeq([self.data])
+        self.data = data
+        self.maps = DataSeq(self.data)
         if parent is not None:
-            self.maps = self.maps.concat([parent.maps])
+            self.maps += parent.maps
 
     def new_child(self, data, enable_nonlocal=None):
         enable_nonlocal = (
@@ -180,13 +188,13 @@ class RO_DataChain(Mapping):
     def __setitem__(self, key, value):
         if self.enable_nonlocal:
             set_value = lambda d: dicttoolz.assoc(d, key=key, value=value)
-            return [set_value(d) for d in self.maps.data]
+            return tuple([set_value(d) for d in self.maps.data])
         dicttoolz.assoc(self.data, key=key, value=value)
 
     def __delitem__(self, key):
         if self.enable_nonlocal:
             unset_value = lambda d: dicttoolz.dissoc(d, key=key)
-            return [unset_value(d) for d in self.maps.data]
+            return tuple([unset_value(d) for d in self.maps.data])
         dicttoolz.dissoc(self.data, key=key)
 
     def __len__(self):
@@ -199,4 +207,5 @@ class RO_DataChain(Mapping):
         return any(key in m for m in self.maps.data)
 
     def __repr__(self, repr=repr):
-        return " -> ".join(map(repr, self.maps.data))
+        return " >> ".join(map(repr, self.maps))
+
