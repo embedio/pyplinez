@@ -1,4 +1,5 @@
 from collections.abc import Mapping, Sequence
+from types import MappingProxyType
 from itertools import chain
 from toolz import (
     dicttoolz,
@@ -21,6 +22,10 @@ class DataSeq(Sequence):
 
     def mapz(self, func):
         return self.__class__(list(mapz(func, self.data)))
+
+    @property
+    def clear(self):
+        return ()
 
     @property
     def count(self):
@@ -125,9 +130,6 @@ class DataSeq(Sequence):
     def concatv(self, seqs):
         return self.__class__(itertoolz.concatv(self.data, seqs))
 
-    def clear(self):
-        return ()
-
     def __len__(self):
         return itertoolz.count(self.data)
 
@@ -145,7 +147,8 @@ class DataChain(Mapping):
     def __init__(self, data, enable_nonlocal=False, parent=None):
         self.parent = parent
         self.enable_nonlocal = enable_nonlocal
-        self.data = data
+        # self.data = data
+        self.data = MappingProxyType(data)
         self.maps = DataSeq([self.data])
         if parent is not None:
             fam_maps = self.maps + parent.maps

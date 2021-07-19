@@ -1,6 +1,6 @@
 from pathlib import Path
-from vaex.dataframe import DataFrame, Column
 from toolz import dicttoolz, curried, itertoolz
+import vaex
 
 
 def transform_path_to_posix(mapping):
@@ -10,7 +10,7 @@ def transform_path_to_posix(mapping):
 
 def transform_ascii_to_vaex(mapping):
     """Transforms an ascii/text, tab seperated file into a vaex dataframe."""
-    to_vaex_dframe = lambda path: DataFrame.from_ascii(path, seperator="\t")
+    to_vaex_dframe = lambda path: vaex.from_ascii(path, seperator="\t")
     return dicttoolz.valmap(to_vaex_dframe, mapping)
 
 
