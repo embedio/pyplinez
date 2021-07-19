@@ -1,16 +1,25 @@
 from collections.abc import Mapping, Sequence
 from itertools import chain
-from toolz import dicttoolz, itertoolz, functoolz, recipes, curried, map as mapz
+from toolz import (
+    dicttoolz,
+    itertoolz,
+    functoolz,
+    recipes,
+    curried,
+    map as mapz,
+    filter as filterz,
+)
 
 
 class DataSeq(Sequence):
     def __init__(self, data):
         self.data = tuple(data)
 
-    def pipe(self, *funcs):
-        return self.__class__(functoolz.pipe(self.data, *funcs))
+    def dspipe(self, *funcs):
+        vp = lambda d: functoolz.pipe(d, *funcs)
+        return self.map(vp)
 
-    def map(self, func):
+    def mapz(self, func):
         return self.__class__(list(mapz(func, self.data)))
 
     @property
@@ -96,8 +105,10 @@ class DataSeq(Sequence):
     def random_sample(self, prob, random_state=None):
         return self.__class__(itertoolz.random_sample(prob, self.data, random_state))
 
-    def reduceby(self, key, binop, init='__no__default__'):
-        return self.__class__(itertoolz.reduceby(key=key, binop=binop, seq=self.data, init=init))
+    def reduceby(self, key, binop, init="__no__default__"):
+        return self.__class__(
+            itertoolz.reduceby(key=key, binop=binop, seq=self.data, init=init)
+        )
 
     def countby(self, key):
         return self.__class__(recipes.countby(key, self.data))
@@ -106,25 +117,16 @@ class DataSeq(Sequence):
         return self.__class__(recipes.partitionby(func, self.data))
 
     def compact(self, func=None):
-        from toolz import filter as _filter
-
-        return self.__class__(_filter(func, self.data))
+        return self.__class__(filterz(func, self.data))
 
     def concat(self, seqs):
         return self.__class__(itertoolz.concat([self.data, seqs]))
 
     def concatv(self, seqs):
-        return self.__class__(itertoolz.concatv(self.data,seqs))
+        return self.__class__(itertoolz.concatv(self.data, seqs))
 
     def clear(self):
         return ()
-
-    def print(self):
-        pass 
-
-    def valpipe(self, *funcs):
-        vp = lambda d: functoolz.pipe(d, *funcs)
-        return self.map(vp).data
 
     def __len__(self):
         return itertoolz.count(self.data)
@@ -137,6 +139,7 @@ class DataSeq(Sequence):
 
     def __add__(self, other):
         return tuple(itertoolz.concatv(self, other))
+
 
 class DataChain(Mapping):
     def __init__(self, data, enable_nonlocal=False, parent=None):
@@ -154,17 +157,36 @@ class DataChain(Mapping):
         )
         return self.__class__(data=data, enable_nonlocal=enable_nonlocal, parent=self)
 
+    @property
+    def root(self):
+        return self if self.parent is None else self.parent.root
+
+    @property
     def keys(self):
         return self.data.keys()
 
+    @property
     def values(self):
         return self.data.values()
 
+    @property
     def items(self):
         return self.data.items()
 
+    @property
     def clear(self):
         return {}
+
+    def ddpipe(self, *funcs):
+        return self.__class__(functoolz.pipe(self.data, *funcs))
+
+    def ddrec(self, *funcs):
+        for func in funcs:
+            self = self.new_child(func(self.data))
+        return self
+
+    def do(self, func):
+        return functoolz.do(func, self.data)
 
     def get(self, *keys):
         return self.data.__getitem__(*keys)
@@ -187,23 +209,19 @@ class DataChain(Mapping):
     def itemfilter(self, predicate):
         return self.__class__(dicttoolz.itemfilter(predicate, self.data))
 
-    @property
-    def root(self):
-        return self if self.parent is None else self.parent.root
-
     def __getitem__(self, key):
         return tuple(itertoolz.pluck(key, self.maps.data))
 
     def __setitem__(self, key, value):
         if self.enable_nonlocal:
             set_value = lambda d: dicttoolz.assoc(d, key=key, value=value)
-            return tuple([set_value(d) for d in self.maps.data])
+            return tuple((set_value(d) for d in self.maps.data))
         dicttoolz.assoc(self.data, key=key, value=value)
 
     def __delitem__(self, key):
         if self.enable_nonlocal:
             unset_value = lambda d: dicttoolz.dissoc(d, key=key)
-            return tuple([unset_value(d) for d in self.maps.data])
+            return tuple((unset_value(d) for d in self.maps.data))
         dicttoolz.dissoc(self.data, key=key)
 
     def __len__(self):
@@ -216,5 +234,4 @@ class DataChain(Mapping):
         return any(key in m for m in self.maps.data)
 
     def __repr__(self, repr=repr):
-        return " >> ".join(map(repr, self.maps))
-
+        return " -> ".join(map(repr, self.maps))
