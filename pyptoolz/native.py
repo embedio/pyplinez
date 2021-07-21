@@ -1,3 +1,4 @@
+import itertools
 from pathlib import Path
 from toolz import dicttoolz, itertoolz, functoolz, curried
 
@@ -108,3 +109,38 @@ def xpath_filter_row_one_value(value):
     """filter value in first line of file"""
     has_value = lambda path: value not in path.open().readline()
     return curried.valfilter(has_value)
+
+
+def merge_maps(*maps, **kwargs):
+    return curried.valmap(*maps, **kwargs)
+
+
+def keyjoin(
+    leftkey="",
+    leftseq=None,
+    lprefix="",
+    rightkey="",
+    rightseq=None,
+    rprefix="",
+    left_default="__no__default__",
+    right_default="__no__default__",
+):
+
+    # join, keymap, merge
+    # consider using merge_with to apply function to values after merge operation
+    leftkey = lprefix + leftkey
+    leftseq = (dicttoolz.keymap(lambda x: lprefix + x, x) for x in leftseq)
+
+    rightkey = rprefix + rightkey
+    rightseq = (dicttoolz.keymap(lambda x: rprefix + x, x) for x in rightseq)
+    return itertools.starmap(
+        dicttoolz.merge,
+        itertoolz.join(
+            leftkey=leftkey,
+            leftseq=leftseq,
+            rightkey=rightkey,
+            rightseq=rightseq,
+            left_default=left_default,
+            right_default=right_default,
+        ),
+    )

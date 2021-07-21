@@ -18,7 +18,7 @@ class DataSeq(Sequence):
 
     def dspipe(self, *funcs):
         vp = lambda d: functoolz.pipe(d, *funcs)
-        return self.map(vp)
+        return self.mapz(vp)
 
     def mapz(self, func):
         return self.__class__(list(mapz(func, self.data)))
@@ -191,8 +191,8 @@ class DataChain(Mapping):
     def do(self, func):
         return functoolz.do(func, self.data)
 
-    def get(self, *keys):
-        return self.data.__getitem__(*keys)
+    def get(self, ind, default='__no__default__'):
+        return self.__class__(itertoolz.get(ind, self.data, default))
 
     def valmap(self, func):
         return self.__class__(dicttoolz.valmap(func, self.data))
@@ -238,3 +238,15 @@ class DataChain(Mapping):
 
     def __repr__(self, repr=repr):
         return " -> ".join(map(repr, self.maps))
+
+
+from pathlib import Path
+
+class DataPipe:
+    def __init__(self, dir):
+        self.source = MappingProxyType({f.stem: f for f in Path(dir).iterdir()})
+        self.main = DataChain(self.source)
+        self.root = self.main.root
+
+    def to_vaex(self):
+        pass
