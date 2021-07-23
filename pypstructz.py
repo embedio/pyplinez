@@ -1,3 +1,4 @@
+from collections import ChainMap
 from collections.abc import Mapping, Sequence
 from types import MappingProxyType
 from itertools import chain
@@ -7,6 +8,7 @@ from toolz import (
     functoolz,
     recipes,
     curried,
+    get_in,
     map as mapz,
     filter as filterz,
 )
@@ -46,6 +48,9 @@ class DataSeq(Sequence):
     @property
     def last(self):
         return self.__class__(itertoolz.last(self.data))
+
+    def sort(self, key=None, reverse=False):
+        return self.__class__(sorted(self.data, key=key, reverse=reverse))
 
     def do(self, func):
         return functoolz.do(func, self.data)
@@ -189,10 +194,13 @@ class DataChain(Mapping):
         return self
 
     def do(self, func):
-        return functoolz.do(func, self.data)
+        return self.__class__(functoolz.do(func, self.data))
 
-    def get(self, ind, default='__no__default__'):
-        return self.__class__(itertoolz.get(ind, self.data, default))
+    def get(self, ind, default="__no__default__"):
+        return tuple(itertoolz.get(ind, self.data, default))
+
+    def get_in(self, keys, default=None, no_default=False):
+        return tuple(get_in(keys, self.data, default=default, no_default=no_default))
 
     def valmap(self, func):
         return self.__class__(dicttoolz.valmap(func, self.data))
@@ -242,11 +250,15 @@ class DataChain(Mapping):
 
 from pathlib import Path
 
+
 class DataPipe:
     def __init__(self, dir):
         self.source = MappingProxyType({f.stem: f for f in Path(dir).iterdir()})
         self.main = DataChain(self.source)
         self.root = self.main.root
 
-    def to_vaex(self):
-        pass
+
+class ChainPipe(ChainMap):
+    def __init__(self, data):
+        self.data = DataChain(data)
+        self.maps = DataSeq(self.data)
