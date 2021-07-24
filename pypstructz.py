@@ -1,4 +1,3 @@
-from collections import ChainMap
 from collections.abc import Mapping, Sequence
 from types import MappingProxyType
 from itertools import chain
@@ -196,8 +195,11 @@ class DataChain(Mapping):
     def do(self, func):
         return self.__class__(functoolz.do(func, self.data))
 
-    def get(self, ind, default="__no__default__"):
-        return tuple(itertoolz.get(ind, self.data, default))
+    def get(self, key, default=None):
+        return self.data.get(key, default)
+
+    def getz(self, ind, default="__no__default__"):
+        return self.__class__(itertoolz.get(ind, self.data, default))
 
     def get_in(self, keys, default=None, no_default=False):
         return tuple(get_in(keys, self.data, default=default, no_default=no_default))
@@ -245,7 +247,7 @@ class DataChain(Mapping):
         return any(key in m for m in self.maps.data)
 
     def __repr__(self, repr=repr):
-        return " -> ".join(map(repr, self.maps))
+        return " ANCESTOR --> ".join(map(repr, self.maps))
 
 
 from pathlib import Path
@@ -254,11 +256,11 @@ from pathlib import Path
 class DataPipe:
     def __init__(self, dir):
         self.source = MappingProxyType({f.stem: f for f in Path(dir).iterdir()})
-        self.main = DataChain(self.source)
-        self.root = self.main.root
+        self.data = DataChain(self.source)
+        self.root = self.data.root
 
+    def select(self, key):
+        pass
 
-class ChainPipe(ChainMap):
-    def __init__(self, data):
-        self.data = DataChain(data)
-        self.maps = DataSeq(self.data)
+    def transform(self, func):
+        return self.data.valmap(func)

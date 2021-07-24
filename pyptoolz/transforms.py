@@ -1,25 +1,31 @@
 from pathlib import Path
-from toolz import dicttoolz, curried, itertoolz
+from toolz import itertoolz, curried
 import vaex
 
 
-def transform_path_to_posix(mapping):
-    as_posix = lambda path: path.as_posix()
-    return dicttoolz.valmap(as_posix, mapping)
+transform_path_to_posix = lambda path: Path(path).as_posix()
 
 
-def transform_ascii_to_vaex(mapping):
-    """Transforms an ascii/text, tab seperated file into a vaex dataframe."""
-    to_vaex_dframe = lambda path: vaex.from_ascii(path, seperator="\t")
-    return dicttoolz.valmap(to_vaex_dframe, mapping)
+def path_to_posix(path):
+    return curried.valmap(transform_path_to_posix)
 
 
-def transform_vaex_to_gen(mapping):
-    """Transforms vaex dataframe rows into a generator of python dicts."""
-    dframe_to_iterrows = lambda df: (itertoolz.second(x) for x in df.iterrows())
-    return dicttoolz.valmap(dframe_to_iterrows, mapping)
+transform_ascii_to_vaex = lambda path: vaex.from_ascii(path, seperator="\t")
 
 
-def transform_vaex_to_dict(mapping):
-    to_dict = lambda df: df.to_dict()
-    return dicttoolz.valmap(to_dict, mapping)
+def asscii_to_vaex(path):
+    return curried.valmap(transform_ascii_to_vaex)
+
+
+transform_vaex_to_gen = lambda df: (itertoolz.second(x) for x in df.iterrows())
+
+
+def vaex_to_gen(self, df):
+    return curried.valmap(transform_vaex_to_gen)
+
+
+transform_vaex_to_dict = lambda df: df.to_dict()
+
+
+def vaex_to_dict(self, df):
+    return curried.valmap(transform_vaex_to_dict)
