@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from collections.abc import Mapping, Sequence
 from types import MappingProxyType
 from itertools import chain
@@ -12,7 +13,7 @@ from toolz import (
     filter as filterz,
 )
 
-
+@dataclass
 class DataSeq(Sequence):
     def __init__(self, data):
         self.data = tuple(data)
@@ -147,22 +148,18 @@ class DataSeq(Sequence):
         return tuple(itertoolz.concatv(self, other))
 
 
+@dataclass
 class DataChain(Mapping):
-    def __init__(self, data, enable_nonlocal=False, parent=None):
+    def __init__(self, data, parent=None):
         self.parent = parent
-        self.enable_nonlocal = enable_nonlocal
-        # self.data = data
         self.data = MappingProxyType(data)
         self.maps = DataSeq([self.data])
         if parent is not None:
             fam_maps = self.maps + parent.maps
             self.maps = DataSeq(fam_maps)
 
-    def new_child(self, data, enable_nonlocal=None):
-        enable_nonlocal = (
-            self.enable_nonlocal if enable_nonlocal is None else enable_nonlocal
-        )
-        return self.__class__(data=data, enable_nonlocal=enable_nonlocal, parent=self)
+    def new_child(self, data):
+        return self.__class__(data=data, parent=self)
 
     @property
     def root(self):
@@ -180,62 +177,62 @@ class DataChain(Mapping):
     def items(self):
         return self.data.items()
 
-    @property
-    def clear(self):
-        return {}
-
     def ddpipe(self, *funcs):
-        return self.__class__(functoolz.pipe(self.data, *funcs))
+        return self.new_child(functoolz.pipe(self.data, *funcs))
 
-    def ddrec(self, *funcs):
-        for func in funcs:
-            self = self.new_child(func(self.data))
-        return self
+    #def ddrec(self, *funcs):
+    #    for func in funcs:
+    #        self = self.new_child(func(self.data))
+    #    return self
 
     def do(self, func):
-        return self.__class__(functoolz.do(func, self.data))
+        return self.new_child(functoolz.do(func, self.data))
 
     def get(self, key, default=None):
         return self.data.get(key, default)
 
     def getz(self, ind, default="__no__default__"):
-        return self.__class__(itertoolz.get(ind, self.data, default))
+        return itertoolz.get(ind, self.data, default)
 
     def get_in(self, keys, default=None, no_default=False):
         return tuple(get_in(keys, self.data, default=default, no_default=no_default))
 
     def valmap(self, func):
-        return self.__class__(dicttoolz.valmap(func, self.data))
+        return self.new_child(dicttoolz.valmap(func, self.data))
 
     def valfilter(self, predicate):
-        return self.__class__(dicttoolz.valfilter(predicate, self.data))
+        return self.new_child(dicttoolz.valfilter(predicate, self.data))
 
     def keymap(self, func):
-        return self.__class__(dicttoolz.keymap(func, self.data))
+        return self.new_child(dicttoolz.keymap(func, self.data))
 
     def keyfilter(self, predicate):
-        return self.__class__(dicttoolz.keyfilter(predicate, self.data))
+        return self.new_child(dicttoolz.keyfilter(predicate, self.data))
 
     def itemmap(self, func):
-        return self.__class__(dicttoolz.itemmap(func, self.data))
+        return self.new_child(dicttoolz.itemmap(func, self.data))
 
     def itemfilter(self, predicate):
-        return self.__class__(dicttoolz.itemfilter(predicate, self.data))
+        return self.new_child(dicttoolz.itemfilter(predicate, self.data))
+    
+    def assoc(self, key, value):
+        return self.new_child(dicttoolz.assoc(self.data, key, value))
+    
+    def assoc_in(self, keys, value):
+        return self.new_child(dicttoolz.assoc_in(self.data, keys, value))
+
+    def dissoc(self, *keys, **kwargs):
+        return self.new_child(dicttoolz.dissoc(self.data, *keys, **kwargs))
+
+    def merge(self, *dicts, **kwargs):
+        return self.new_child(dicttoolz.merge(self.data, *dicts, **kwargs))
+
+    def merge_with(self, func, *dicts, **kwargs):
+        return self.new_child(dicttoolz.merge_with(func, self.data, *dicts, **kwargs))
+
 
     def __getitem__(self, key):
         return tuple(itertoolz.pluck(key, self.maps.data))
-
-    def __setitem__(self, key, value):
-        if self.enable_nonlocal:
-            set_value = lambda d: dicttoolz.assoc(d, key=key, value=value)
-            return tuple((set_value(d) for d in self.maps.data))
-        dicttoolz.assoc(self.data, key=key, value=value)
-
-    def __delitem__(self, key):
-        if self.enable_nonlocal:
-            unset_value = lambda d: dicttoolz.dissoc(d, key=key)
-            return tuple((unset_value(d) for d in self.maps.data))
-        dicttoolz.dissoc(self.data, key=key)
 
     def __len__(self):
         return itertoolz.count(self.maps.data)
@@ -249,18 +246,3 @@ class DataChain(Mapping):
     def __repr__(self, repr=repr):
         return " ANCESTOR --> ".join(map(repr, self.maps))
 
-
-from pathlib import Path
-
-
-class DataPipe:
-    def __init__(self, dir):
-        self.source = MappingProxyType({f.stem: f for f in Path(dir).iterdir()})
-        self.data = DataChain(self.source)
-        self.root = self.data.root
-
-    def select(self, key):
-        pass
-
-    def transform(self, func):
-        return self.data.valmap(func)
