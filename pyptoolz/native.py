@@ -20,7 +20,7 @@ def seq_get_values_from_dict_keys(dict_keys):
     return curried.valmap(pluck_data)
 
 
-def seq_group_by_dict_key(dict_key):
+def seq_groupby_dict_key(dict_key):
     groupby_dict_key = lambda seq: itertoolz.groupby(dict_key, seq)
     return curried.valmap(groupby_dict_key)
 

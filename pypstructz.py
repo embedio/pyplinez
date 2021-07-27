@@ -13,6 +13,7 @@ from toolz import (
     filter as filterz,
 )
 
+
 @dataclass
 class DataSeq(Sequence):
     def __init__(self, data):
@@ -180,7 +181,7 @@ class DataChain(Mapping):
     def ddpipe(self, *funcs):
         return self.new_child(functoolz.pipe(self.data, *funcs))
 
-    #def ddrec(self, *funcs):
+    # def ddrec(self, *funcs):
     #    for func in funcs:
     #        self = self.new_child(func(self.data))
     #    return self
@@ -214,10 +215,10 @@ class DataChain(Mapping):
 
     def itemfilter(self, predicate):
         return self.new_child(dicttoolz.itemfilter(predicate, self.data))
-    
+
     def assoc(self, key, value):
         return self.new_child(dicttoolz.assoc(self.data, key, value))
-    
+
     def assoc_in(self, keys, value):
         return self.new_child(dicttoolz.assoc_in(self.data, keys, value))
 
@@ -229,7 +230,6 @@ class DataChain(Mapping):
 
     def merge_with(self, func, *dicts, **kwargs):
         return self.new_child(dicttoolz.merge_with(func, self.data, *dicts, **kwargs))
-
 
     def __getitem__(self, key):
         return tuple(itertoolz.pluck(key, self.maps.data))
@@ -245,4 +245,3 @@ class DataChain(Mapping):
 
     def __repr__(self, repr=repr):
         return " ANCESTOR --> ".join(map(repr, self.maps))
-
