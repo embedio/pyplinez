@@ -181,10 +181,10 @@ class DataChain(Mapping):
     def ddpipe(self, *funcs):
         return self.new_child(functoolz.pipe(self.data, *funcs))
 
-    # def ddrec(self, *funcs):
-    #    for func in funcs:
-    #        self = self.new_child(func(self.data))
-    #    return self
+    def ddrec(self, *funcs):
+        for func in funcs:
+            self = self.new_child(func(self.data))
+        return self
 
     def do(self, func):
         return self.new_child(functoolz.do(func, self.data))
@@ -245,3 +245,4 @@ class DataChain(Mapping):
 
     def __repr__(self, repr=repr):
         return " ANCESTOR --> ".join(map(repr, self.maps))
+
