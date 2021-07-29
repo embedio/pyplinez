@@ -158,3 +158,7 @@ def dict_sort_by_key(key, reverse=True):
     sort_column = functoolz.partial(sorted, key=curried.get(key), reverse=reverse)
     sorted_seq = lambda seq: dicttoolz.valmap(sort_column, seq)
     return curried.valmap(sorted_seq)
+
+def dict_toint_key(mapping):
+    toint = lambda s: int(s) if s.isnumeric() else s
+    return dicttoolz.keymap(toint, mapping)
