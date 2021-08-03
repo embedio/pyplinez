@@ -145,13 +145,14 @@ def keyjoin(
         ),
     )
 
+
 def dict_filter_by_key(key):
     filter_column = lambda d: dicttoolz.keyfilter(lambda x: x == key, d)
     return curried.valfilter(filter_column)
 
 
-def dict_get_key(key):
-    return curried.valmap(curried.get(key))
+def dict_get_keys(keys):
+    return curried.valmap(curried.get(keys))
 
 
 def dict_sort_by_key(key, reverse=True):
@@ -159,6 +160,9 @@ def dict_sort_by_key(key, reverse=True):
     sorted_seq = lambda seq: dicttoolz.valmap(sort_column, seq)
     return curried.valmap(sorted_seq)
 
+
 def dict_toint_key(mapping):
-    toint = lambda s: int(s) if s.isnumeric() else s
+    toint = (
+        lambda s: int(s) if s.isnumeric() else s
+    )
     return dicttoolz.keymap(toint, mapping)

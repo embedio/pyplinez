@@ -13,7 +13,6 @@ from toolz import (
     filter as filterz,
 )
 
-
 @dataclass
 class DataSeq(Sequence):
     def __init__(self, data):
@@ -147,7 +146,6 @@ class DataSeq(Sequence):
 
     def __add__(self, other):
         return tuple(itertoolz.concatv(self, other))
-
 
 @dataclass
 class DataChain(Mapping):

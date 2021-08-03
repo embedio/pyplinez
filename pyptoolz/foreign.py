@@ -31,3 +31,4 @@ def vaex_unique_column_values(column_name):
 def vaex_transpose_vaex(mapping):
     transpose_vaex = lambda df: from_pandas(df.to_pandas_df().transpose())
     return dicttoolz.valmap(transpose_vaex, mapping)
+
