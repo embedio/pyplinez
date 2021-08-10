@@ -13,6 +13,7 @@ from toolz import (
     filter as filterz,
 )
 
+
 @dataclass
 class DataSeq(Sequence):
     def __init__(self, data):
@@ -147,6 +148,7 @@ class DataSeq(Sequence):
     def __add__(self, other):
         return tuple(itertoolz.concatv(self, other))
 
+
 @dataclass
 class DataChain(Mapping):
     def __init__(self, data, parent=None):
@@ -229,6 +231,10 @@ class DataChain(Mapping):
     def merge_with(self, func, *dicts, **kwargs):
         return self.new_child(dicttoolz.merge_with(func, self.data, *dicts, **kwargs))
 
+    def pick(self, keys):
+        p = functoolz.partial(lambda k: k in keys)
+        return self.new_child(dicttoolz.keyfilter(p, self.data))
+
     def __getitem__(self, key):
         return tuple(itertoolz.pluck(key, self.maps.data))
 
@@ -243,4 +249,3 @@ class DataChain(Mapping):
 
     def __repr__(self, repr=repr):
         return " ANCESTOR --> ".join(map(repr, self.maps))
-

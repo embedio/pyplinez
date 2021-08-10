@@ -25,13 +25,13 @@ def seq_groupby_dict_key(dict_key):
     return curried.valmap(groupby_dict_key)
 
 
-def seq_filter_by_dict_key(dict_key):
+def seq_filter_dict_key(dict_key):
     """Returns sequence"""
     filter_key = lambda seq: [d for d in seq if dict_key in d.keys()]
     return curried.valfilter(filter_key)
 
 
-def xseq_filter_by_dict_key(dict_key):
+def xseq_filter_dict_key(dict_key):
     filter_key = lambda seq: [d for d in seq if dict_key not in d.keys()]
     return curried.valfilter(filter_key)
 
@@ -46,13 +46,13 @@ def xseq_filter_value_by_dict_key(value, key):
     return curried.valfilter(key_value)
 
 
-def pick(seq):
-    p = functoolz.partial(lambda k: k in seq)
+def dict_fromkeys(keys):
+    p = functoolz.partial(lambda k: k in keys)
     return curried.keyfilter(p)
 
 
 def seq_pick_dict_keys(dict_keys):
-    pick_keys = lambda seq: pick(dict_keys)
+    pick_keys = lambda seq: dict_fromkeys(dict_keys)
     return curried.valmap(pick_keys)
 
 
@@ -72,7 +72,7 @@ def seq_grab_dict_keys(dict_keys):
     return curried.valmap(pick_keys)
 
 
-def seq_sort_by_dict_key(dict_key, reverse=True):
+def seq_sort_dict_key(dict_key, reverse=True):
     sort_by_key = functoolz.partial(sorted, key=curried.get(dict_key), reverse=reverse)
     return curried.valmap(sort_by_key)
 
@@ -146,23 +146,21 @@ def keyjoin(
     )
 
 
-def dict_filter_by_key(key):
+def dict_filter_key(key):
     filter_column = lambda d: dicttoolz.keyfilter(lambda x: x == key, d)
     return curried.valfilter(filter_column)
 
 
-def dict_get_keys(keys):
+def dict_getkeys(keys):
     return curried.valmap(curried.get(keys))
 
 
-def dict_sort_by_key(key, reverse=True):
+def dict_sortkey(key, reverse=True):
     sort_column = functoolz.partial(sorted, key=curried.get(key), reverse=reverse)
     sorted_seq = lambda seq: dicttoolz.valmap(sort_column, seq)
     return curried.valmap(sorted_seq)
 
 
 def dict_toint_key(mapping):
-    toint = (
-        lambda s: int(s) if s.isnumeric() else s
-    )
+    toint = lambda s: int(s) if s.isnumeric() else s
     return dicttoolz.keymap(toint, mapping)
