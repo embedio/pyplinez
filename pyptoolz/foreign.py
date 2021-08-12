@@ -61,3 +61,15 @@ def vaex_unique_column_values(column_name):
 def vaex_transpose_vaex(mapping):
     transpose_vaex = lambda df: from_pandas(df.to_pandas_df().transpose())
     return dicttoolz.valmap(transpose_vaex, mapping)
+
+
+def vaex_percent_floor(percent):
+    approx_percent = lambda df: df.percentile_approx(df.Data_Value, percentage=percent)
+    percent_floor = lambda df: df[df.Data_Value >= approx_percent(df)]
+    return curried.valmap(percent_floor)
+
+
+def vaex_percent_ceiling(percent):
+    approx_percent = lambda df: df.percentile_approx(df.Data_Value, percentage=percent)
+    percent_ceiling = lambda df: df[df.Data_Value <= approx_percent(df)]
+    return curried.valmap(percent_ceiling)

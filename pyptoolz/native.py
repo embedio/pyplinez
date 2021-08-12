@@ -152,7 +152,10 @@ def dict_filter_key(key):
 
 
 def dict_getkeys(keys):
-    return curried.valmap(curried.get(keys))
+    # return curried.valmap(curried.get(keys))
+    return curried.get(
+        keys,
+    )
 
 
 def dict_sortkey(key, reverse=True):
