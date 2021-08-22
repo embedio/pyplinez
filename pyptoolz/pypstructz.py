@@ -1,8 +1,10 @@
 import pickle, json, csv, os, shutil
+from pathlib import Path
 from dataclasses import dataclass
 from collections.abc import Mapping, Sequence
 from types import MappingProxyType
 from itertools import chain
+import dill
 from toolz import (
     dicttoolz,
     itertoolz,
@@ -50,6 +52,10 @@ class DataSeq(Sequence):
     @property
     def last(self):
         return self.__class__(itertoolz.last(self.data))
+
+    @property
+    def reverse(self):
+        return self.__class__(reversed(self.data))
 
     def sort(self, key=None, reverse=False):
         return self.__class__(sorted(self.data, key=key, reverse=reverse))
@@ -152,9 +158,10 @@ class DataSeq(Sequence):
 
 @dataclass
 class DataChain(Mapping):
-    def __init__(self, data, parent=None):
+    def __init__(self, data=None, parent=None):
         self.parent = parent
-        self.data = MappingProxyType(data)
+        self.data = data if data != None and isinstance(data, Mapping) else {}
+        self._data = MappingProxyType(self.data)
         self.maps = DataSeq([self.data])
         if parent is not None:
             fam_maps = self.maps + parent.maps
@@ -166,6 +173,10 @@ class DataChain(Mapping):
     @property
     def root(self):
         return self if self.parent is None else self.parent.root
+
+    @property
+    def generations(self):
+        return MappingProxyType(dict(enumerate(self.maps.data)))
 
     @property
     def keys(self):
@@ -180,15 +191,15 @@ class DataChain(Mapping):
         return self.data.items()
 
     def ddpipe(self, *funcs):
-        return self.new_child(functoolz.pipe(self.data, *funcs))
+        return self.new_child(functoolz.pipe(self._data, *funcs))
 
     def ddrec(self, *funcs):
         for func in funcs:
-            self = self.new_child(func(self.data))
+            self = self.new_child(func(self._data))
         return self
 
     def do(self, func):
-        return self.new_child(functoolz.do(func, self.data))
+        return self.new_child(functoolz.do(func, self._data))
 
     def get(self, key, default=None):
         return self.data.get(key, default)
@@ -200,41 +211,41 @@ class DataChain(Mapping):
         return tuple(get_in(keys, self.data, default=default, no_default=no_default))
 
     def valmap(self, func):
-        return self.new_child(dicttoolz.valmap(func, self.data))
+        return self.new_child(dicttoolz.valmap(func, self._data))
 
     def valfilter(self, predicate):
-        return self.new_child(dicttoolz.valfilter(predicate, self.data))
+        return self.new_child(dicttoolz.valfilter(predicate, self._data))
 
     def keymap(self, func):
-        return self.new_child(dicttoolz.keymap(func, self.data))
+        return self.new_child(dicttoolz.keymap(func, self._data))
 
     def keyfilter(self, predicate):
-        return self.new_child(dicttoolz.keyfilter(predicate, self.data))
+        return self.new_child(dicttoolz.keyfilter(predicate, self._data))
 
     def itemmap(self, func):
-        return self.new_child(dicttoolz.itemmap(func, self.data))
+        return self.new_child(dicttoolz.itemmap(func, self._data))
 
     def itemfilter(self, predicate):
-        return self.new_child(dicttoolz.itemfilter(predicate, self.data))
+        return self.new_child(dicttoolz.itemfilter(predicate, self._data))
 
     def assoc(self, key, value):
-        return self.new_child(dicttoolz.assoc(self.data, key, value))
+        return self.new_child(dicttoolz.assoc(self._data, key, value))
 
     def assoc_in(self, keys, value):
-        return self.new_child(dicttoolz.assoc_in(self.data, keys, value))
+        return self.new_child(dicttoolz.assoc_in(self._data, keys, value))
 
     def dissoc(self, *keys, **kwargs):
-        return self.new_child(dicttoolz.dissoc(self.data, *keys, **kwargs))
+        return self.new_child(dicttoolz.dissoc(self._data, *keys, **kwargs))
 
     def merge(self, *dicts, **kwargs):
-        return self.new_child(dicttoolz.merge(self.data, *dicts, **kwargs))
+        return self.new_child(dicttoolz.merge(self._data, *dicts, **kwargs))
 
     def merge_with(self, func, *dicts, **kwargs):
-        return self.new_child(dicttoolz.merge_with(func, self.data, *dicts, **kwargs))
+        return self.new_child(dicttoolz.merge_with(func, self._data, *dicts, **kwargs))
 
     def pick(self, keys):
         p = functoolz.partial(lambda k: k in keys)
-        return self.new_child(dicttoolz.keyfilter(p, self.data))
+        return self.new_child(dicttoolz.keyfilter(p, self._data))
 
     def __getitem__(self, key):
         return tuple(itertoolz.pluck(key, self.maps.data))
@@ -254,7 +265,7 @@ class DataChain(Mapping):
 
 @dataclass
 class PersistentDict(dict):
-    '''Persistent dictionary with an API compatible with shelve and anydbm.
+    """Persistent dictionary with an API compatible with shelve and anydbm.
 
     The dict is keypt in memory, so the dictionary operations run as fast as a regular dict.
 
@@ -263,26 +274,26 @@ class PersistentDict(dict):
     Input file format is automatically discovered.
     Output file format is selectable between pickle, json, and csv.
     All three serialization formats are backed by fast C implementations.
-    '''
+    """
 
-    def __init__(self, filename, flag='c', mode=None, format='pickle', *args, **kwargs):
-        self.flag = flag                    # r=readoly, c=create, or n=new
-        self.mode = mode                    # None or an octal triple like 0644
-        self.format = format                # 'csv', 'json', or 'pickle'
+    def __init__(self, filename, flag="c", mode=None, format="pickle", *args, **kwargs):
+        self.flag = flag  # r=readoly, c=create, or n=new
+        self.mode = mode  # None or an octal triple like 0644
+        self.format = format  # 'csv', 'json', or 'pickle'
         self.filename = filename
-        if flag != 'n' and os.access(filename, os.R_OK):
-            fileobj = open(filename, 'rb' if format=='pickle' else 'r')
+        if flag != "n" and os.access(filename, os.R_OK):
+            fileobj = open(filename, "rb" if format == "pickle" or "dill" else "r")
             with fileobj:
                 self.load(fileobj)
         dict.__init__(self, *args, **kwargs)
 
     def sync(self):
-        'Write dict to disk'
-        if self.flag == 'r':
+        "Write dict to disk"
+        if self.flag == "r":
             return
-        filename = self.filename
-        tempname = filename + '.tmp'
-        fileobj = open(tempname, 'wb' if self.format=='pickle' else 'w')
+        filename = Path(self.filename).as_posix()
+        tempname = filename + ".tmp"
+        fileobj = open(tempname, "wb" if self.format == "pickle" or "dill" else "w")
         try:
             self.dump(fileobj)
         except Exception:
@@ -290,36 +301,44 @@ class PersistentDict(dict):
             raise
         finally:
             fileobj.close()
-        shutil.move(tempname, self.filename)    # atomic commit
+        shutil.move(tempname, self.filename)  # atomic commit
         if self.mode is not None:
             os.chmod(self.filename, self.mode)
 
-        def close(self):
-            self.sync()
+    def close(self):
+        self.sync()
 
-        def __enter__(self):
-            return self
+    def __enter__(self):
+        return self
 
-        def __exit__(self):
-            self.close()
+    def __exit__(self):
+        self.close()
 
-        def dump(self, fileobj):
-            if self.format == 'csv':
-                csv.writer(fileobj).writerows(self.items())
-            elif self.format == 'json':
-                json.dump(self, fileobj, seperators=(',', ':'))
-            elif self.format == 'pickle':
-                pickle.dump(dict(self), fileobj, 2)
-            else:
-                raise NotImplementedError('Unknown format: ' + repr(self.format))
+    def dump(self, fileobj):
+        if self.format == "csv":
+            csv.writer(fileobj).writerows(self.items())
+        elif self.format == "json":
+            json.dump(self, fileobj, seperators=(",", ":"))
+        elif self.format == "pickle":
+            pickle.dump(dict(self), fileobj, 2)
+        elif self.format == "dill":
+            dill.dump(dict(self), fileobj, 4)
+        else:
+            raise NotImplementedError("Unknown format: " + repr(self.format))
 
     def load(self, fileobj):
         # try formats from most restrictive to least
-        for loader in (pickle.load, json.load, csv.reader):
+        # for loader in (pickle.load, json.load, csv.reader):
+        for loader in (pickle.load, dill.load, json.load, csv.reader):
             fileobj.seek(0)
             try:
                 return self.update(loader(fileobj))
             except Exception:
                 pass
-        raise ValueError('File not in a supported format')
+        raise ValueError("File not in a supported format")
 
+    def pop(self, key):
+        pass
+
+    def popitem(self):
+        pass
