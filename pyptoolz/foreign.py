@@ -3,6 +3,11 @@ from vaex import from_pandas
 
 
 def vaex_filter_value_by_column(value, column_name):
+    filter_value = lambda df: value in df[column_name].tolist()
+    return curried.valfilter(filter_value)
+
+
+def vaex_get_value_by_column(value, column_name):
     get_value = lambda df: df[df[column_name] == value]
     return curried.valmap(get_value)
 
@@ -43,6 +48,16 @@ def vaex_sort_column(column_name):
     return curried.valmap(sort_column)
 
 
+def xvaex_filter_value_by_column(value, column_name):
+    filter_value = lambda df: value not in df[column_name].tolist()
+    return curried.valfilter(filter_value)
+
+
+def xvaex_get_value_by_column(value, column_name):
+    get_value = lambda df: df[df[column_name] != value]
+    return curried.valmap(get_value)
+
+
 def xvaex_filter_column(column_name):
     get_column = lambda df: column_name not in df.column_names
     return curried.valfilter(get_column)
@@ -63,13 +78,22 @@ def vaex_transpose_vaex(mapping):
     return dicttoolz.valmap(transpose_vaex, mapping)
 
 
-def vaex_percent_floor(percent):
-    approx_percent = lambda df: df.percentile_approx(df.Data_Value, percentage=percent)
-    percent_floor = lambda df: df[df.Data_Value >= approx_percent(df)]
+def vaex_percent_floor(percent, column_name="Data_Value"):
+    approx_percent = lambda df: df.percentile_approx(
+        df[column_name], percentage=percent
+    )
+    percent_floor = lambda df: df[df[column_name] >= approx_percent(df)]
     return curried.valmap(percent_floor)
 
 
-def vaex_percent_ceiling(percent):
-    approx_percent = lambda df: df.percentile_approx(df.Data_Value, percentage=percent)
-    percent_ceiling = lambda df: df[df.Data_Value <= approx_percent(df)]
+def vaex_percent_ceiling(percent, column_name="Data_Value"):
+    approx_percent = lambda df: df.percentile_approx(
+        df[column_name], percentage=percent
+    )
+    percent_ceiling = lambda df: df[df[column_name] <= approx_percent(df)]
     return curried.valmap(percent_ceiling)
+
+
+def vaex_drop_columns(column_names):
+    drop_columns = lambda df: df.drop(column_names)
+    return curried.valmap(drop_columns)

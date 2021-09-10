@@ -160,8 +160,11 @@ class DataSeq(Sequence):
 class DataChain(Mapping):
     def __init__(self, data=None, parent=None):
         self.parent = parent
-        self.data = data if data != None and isinstance(data, Mapping) else {}
-        self._data = MappingProxyType(self.data)
+        self.data = (
+            MappingProxyType(data) if data != None and isinstance(data, Mapping) else {}
+        )
+        # self._data = MappingProxyType(self.data)
+        self._data = self.data
         self.maps = DataSeq([self.data])
         if parent is not None:
             fam_maps = self.maps + parent.maps
@@ -176,7 +179,7 @@ class DataChain(Mapping):
 
     @property
     def generations(self):
-        return MappingProxyType(dict(enumerate(self.maps.data)))
+        return MappingProxyType(dict(enumerate(reversed(self.maps.data))))
 
     @property
     def keys(self):
@@ -246,6 +249,10 @@ class DataChain(Mapping):
     def pick(self, keys):
         p = functoolz.partial(lambda k: k in keys)
         return self.new_child(dicttoolz.keyfilter(p, self._data))
+
+    def ignore(self, keys):
+        i = functoolz.partial(lambda k: k not in keys)
+        return self.new_child(dicttoolz.keyfilter(i, self._data))
 
     def __getitem__(self, key):
         return tuple(itertoolz.pluck(key, self.maps.data))
@@ -337,8 +344,8 @@ class PersistentDict(dict):
                 pass
         raise ValueError("File not in a supported format")
 
-    def pop(self, key):
-        pass
+    def fromkeys(self, iterable, value=None):
+        print("Not Implemented")
 
-    def popitem(self):
-        pass
+    def copy(self):
+        print("Not Implemented")

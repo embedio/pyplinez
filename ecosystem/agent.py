@@ -1,4 +1,3 @@
-import pickle, json, csv, os, shutil, shelve
 from pathlib import Path
 from dataclasses import dataclass
 from collections.abc import Mapping, Callable
@@ -8,18 +7,15 @@ from pyptoolz.pypstructz import DataChain, PersistentDict
 
 @dataclass
 class Agent:
-    def __init__(self, env=None, storage="/tmp/ephemoral.pickle", *args, **kwargs):
+    def __init__(self, env=None, storage="/tmp/ephemoral.pkl", **kwargs):
         self._memory = PersistentDict(
-            filename=storage, flag="c", mode=None, format="pickle"
+            filename=storage, flag="c", mode=None, format="dill"
         )
         self._env = (
             env
             if env != None and isinstance(env, Environment)
-            else Environment(location=env, agent=self, *args, **kwargs)
+            else Environment(location=env, agent=self, **kwargs)
         )
-        if self._env.env_data:
-            self._info_file = PersistentDict(self._env.env_data.get("info"))
-            self._func_file = PersistentDict(self._env.env_data.get("func"))
 
     @property
     def memory(self):
@@ -27,92 +23,118 @@ class Agent:
 
     @property
     def info_cache(self):
-        return self._info_file.keys()
+        return self._env.cache.get("info").keys()
 
     @property
     def func_cache(self):
-        return self._func_file.keys()
+        return self._env.cache.get("func").keys()
 
     @property
     def resources(self):
         return DataChain(self._env.resources)
 
     @property
-    def location(self):
+    def _location(self):
         return self._env.location
 
     @property
-    def id(self):
+    def _id(self):
         return id(self)
 
-    def pickle_info(self, info, info_name=""):
-        if not isinstance(info, Mapping):
+    def cache_info(self, info, info_name="", format_="dill"):
+        if not isinstance(info, DataChain):
             return (info,)
         info_name = info_name if len(info_name) > 0 else str(id(info))
-        self._info_file.format = pickle
-        return self._info_file.update({info_name: info})
+        self._env.cache.get("info").format = format_
+        return self._env.cache.get("info").update({info_name: info})
 
-    def dill_func(self, func, func_name=""):
+    def cache_func(self, func, func_name="", format_="dill"):
         if not isinstance(func, Callable):
             return (func,)
         func_name = func_name if len(func_name) > 0 else str(id(func))
-        self._func_file.format = "dill"
-        return self._func_file.update({func_name: func})
+        self._env.cache.get("func").format = format_
+        return self._env.cache.get("func").update({func_name: func})
 
-    def memorize(self, info, info_name="", format="pickle"):
+    def memorize(self, info, info_name="", format_="dill"):
         if not isinstance(info, Mapping):
             return (info,)
         info_name = info_name if len(info_name) > 0 else str(id(info))
-        self._memory.format = format
+        self._memory.format = format_
         return self._memory.update({info_name: info})
 
-    def from_storage(self, key, filename=None):
-        if filename is None:
-            return self._memory.get(key)
-        elif filename == "func":
-            return self._func_file.get(key)
-        elif filename == "info":
-            return self._info_file.get(key)
-        else:
-            return (key, filename)
-
-    def remove_storage(self, filename):
+    def get(self, key, filename="memory"):
         if filename == "memory":
-            return self._memory.clear()
-        elif filename == "func":
-            return self._func_file.clear()
-        elif filename == "info":
-            return self._info_file.clear()
+            return self._memory.get(key)
+        elif filename in ["func", "info"]:
+            return self._env.cache.get(filename).get(key)
         else:
             return (filename,)
 
-    def sync_storage(self, filename=None):
-        if filename is None:
+    def _sync(self, filename="memory"):
+        if filename == "memory":
             return self._memory.sync()
-        elif filename == "func":
-            return self._func_file.sync()
-        elif filename == "info":
-            return self._info_file.sync()
+        elif filename in ["func", "info"]:
+            return self._env.cache.get(filename).sync()
+        else:
+            return (filename,)
+
+    def _clear(self, key, filename):
+        if filename == "memory" and key == "clearmem":
+            return self._memory.clear()
+        elif (
+            filename == "func"
+            and key == "clearfun"
+            or filename == "info"
+            and key == "clearinf"
+        ):
+            return self._env.cache.get(filename).clear()
+        else:
+            return (
+                key,
+                filename,
+            )
+
+    def _pop(self, key, filename):
+        if filename == "memory":
+            return self._memory.pop(key)
+        elif filename in ["func", "info"]:
+            return self._env.cache.get(filename).pop(key)
+        else:
+            return (
+                key,
+                filename,
+            )
+
+    def _popitem(self, filename):
+        if filename == "memory":
+            return self._memory.popitem()
+        elif filename in ["func", "info"]:
+            return self._env.cache.get(filename).popitem()
         else:
             return (filename,)
 
 
 @dataclass
 class Environment:
-    def __init__(self, location=None, agent=None, *args, **kwargs):
+    def __init__(self, location=None, cache=".env_data", agent=None, **kwargs):
         self.location = Path(location) if location != None else Path.cwd()
-        self.resources = (
-            MappingProxyType({path.stem: path for path in self.location.iterdir()})
-            if self.location.is_dir()
-            else location
+        self.resources = MappingProxyType(
+            {
+                path.stem: path
+                for path in self.location.iterdir()
+                if self.location.is_dir()
+            }
         )
-        self.env_data = MappingProxyType(
-            {path.stem: path for path in self.resources.get(".env_data").iterdir()}
+        self.cache = MappingProxyType(
+            {
+                path.stem: PersistentDict(path.as_posix(), format="dill")
+                for path in self.resources.get(cache).iterdir()
+            }
         )
         self._agent = (
             agent
             if agent != None and isinstance(agent, Agent)
-            else Agent(env=self.location, *args, *kwargs)
+            else Agent(env=self.location, **kwargs)
         )
 
     @property
